@@ -6,6 +6,7 @@ use App\Events\Uiupdate;
 use App\Models\soldplayer;
 use App\Models\team;
 use Illuminate\Http\Request;
+use PhpParser\Node\Stmt\TryCatch;
 
 class TeamController extends Controller
 {
@@ -39,29 +40,26 @@ class TeamController extends Controller
     public function store(Request $request)
     {
         //
-        $team = new team;
-        $team->owner_name = $request->owner_name;
-        $team->team_name = $request->team_name;
-        $team->totale_points = $request->totale_points;
-        $team->save();
 
-        $i = 1;
+        try {
+            //code...
+            $imagePath = $request->file('logo')->store('teamlogo', 'public');
+            $team = new team;
+            $team->owner_name = $request->input('owner_name');
+            $team->team_name = $request->input('team_name');
+            $team->logo = asset('storage/' . $imagePath);
+            $team->totale_points = $request->input('totale_points');
+            $team->save();
 
-        while ($i <= 12) {
-            # code...
-            $soldplayer = new soldplayer;
-            $soldplayer->players_no=$i;
-            $soldplayer->teams_id=$team->id;
-            $soldplayer->save();
-
-            $i++;
+            $team->find($team->id)->update([
+                "max_bid_points" => maxBid($team->id)
+            ]);
+            event(new Uiupdate());
+            return response(["msg" => "Team Created Successfully."], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response(["msg" => "Error Accurd"], 200);
         }
-
-        $team->find($team->id)->update([
-            "max_bid_points"=>maxBid($team->id)
-        ]);
-        event(new Uiupdate());
-        return response(["msg" => "Team Created Successfully."], 200);
     }
 
     /**
@@ -96,16 +94,34 @@ class TeamController extends Controller
     public function update(Request $request, team $teams, $id)
     {
         //
-        $teams->find($id)->update([
-            "owner_name" => $request->owner_name,
-            "team_name" => $request->team_name,
-            "totale_points" => $request->totale_points,
-        ]);
-        $teams->where('id',$id)->update([
-            "max_bid_points" => maxBid($id),
-        ]);
-        event(new Uiupdate());
-        return response(["msg" => "Team Updated Successfully."]);
+
+        try {
+            //code...
+
+            // dd($request);
+
+            if ($request->hasFile('logo')) {
+                $imagePath = $request->file('logo')->store('player', 'public');
+                $teams->find($id)->update([
+                    "logo" =>  asset('storage/' . $imagePath),
+                ]);
+            }
+
+            $teams->where('id',$id)->update([
+                "owner_name" => $request->owner_name,
+                "team_name" => $request->team_name,
+                "totale_points" => $request->totale_points,
+            ]);
+            $teams->where('id', $id)->update([
+                "max_bid_points" => maxBid($id),
+            ]);
+            event(new Uiupdate());
+            return response(["msg" => "Team Updated Successfully."], 200);
+            // return response(["msg" => "Team Updated Successfully."]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response(["msg" => $th], 500);
+        }
     }
 
     /**
@@ -118,12 +134,8 @@ class TeamController extends Controller
     {
         //
         $teams->destroy($id);
-        soldplayer::where('teams_id',$id)->delete();
+        soldplayer::where('teams_id', $id)->delete();
         event(new Uiupdate());
         return response(["msg" => "Team Deleted Successfully."]);
     }
 }
-
-// "owner_name":"",
-// "owner_mobaile":"",
-// "totale_points":""

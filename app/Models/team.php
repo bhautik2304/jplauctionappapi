@@ -19,7 +19,7 @@ class team extends Model
     protected $fillable = [
         "owner_name",
         "team_name",
-        // "",
+        "logo",
         "totale_points",
         "max_bid_points",
     ];

@@ -24,8 +24,10 @@ Route::post('auth/login',[authController::class,'login']);
 Route::post('token',[FcmtokenController::class,'store']);
 
 Route::apiResource('team',TeamController::class);
+Route::post('team/update/{id}',[TeamController::class,'update']);
 Route::apiResource('playearcategury',PlayercateguryController::class);
 Route::apiResource('player',PlayerController::class);
+Route::post('player/update/{id}',[PlayerController::class,'update']);
 Route::apiResource('user',userController::class);
 Route::get('soldplayer',[SoldplayerController::class,'index']);
 Route::post('soldplayer',[SoldplayerController::class,'soldPlayer']);

@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -15,6 +16,14 @@ class Handler extends ExceptionHandler
     protected $dontReport = [
         //
     ];
+
+    protected function invalidJson($request, ValidationException $exception)
+    {
+        return response()->json([
+            'message' => 'The given data was invalid.',
+            'errors' => $exception->errors(),
+        ], $exception->status);
+    }
 
     /**
      * A list of the inputs that are never flashed for validation exceptions.

@@ -20,7 +20,6 @@ return new class extends Migration
             $table->unsignedBigInteger('players_id')->nullable();
             $table->unsignedBigInteger('teams_id')->nullable();
             $table->unsignedBigInteger('sold')->nullable();
-            $table->boolean('sold_status')->default(false);
             $table->timestamps();
         });
     }

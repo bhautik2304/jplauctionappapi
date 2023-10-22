@@ -22,7 +22,7 @@ class soldplayer extends Model
         "players_id",
         "teams_id",
         "sold",
-        "sold_status",
+        // "sold_status",
     ];
 
     public function players()

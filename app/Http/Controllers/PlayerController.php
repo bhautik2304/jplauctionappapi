@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\player;
 use Illuminate\Http\Request;
 use App\Events\Uiupdate;
+use Illuminate\Support\Facades\Log;
 
 class PlayerController extends Controller
 {
@@ -38,20 +39,28 @@ class PlayerController extends Controller
     public function store(Request $request)
     {
         //
-        $imagePath = $request->file('image')->store('player', 'public');
-        $data = json_decode($request->data);
-        $player = new player;
-        $player->player_no = $data->player_no;
-        $player->name = $data->name;
-        $player->mobaile = $data->mobaile;
-        $player->image =  asset('storage/' . $imagePath);
-        $player->skill = $data->skill;
-        $player->playercategurie_id = $data->playercategurie_id;
-        $player->save();
+        try {
+            //code...
+            $imagePath = $request->file('image')->store('player', 'public');
+            $player = new player;
+            $player->player_no = $request->input('player_no');
+            $player->name = $request->input('name');
+            $player->mobaile = $request->input('mobaile');
+            $player->image =  asset('storage/' . $imagePath);
+            $player->skill = $request->input('skill');
+            $player->playercategurie_id = $request->input('playercategurie_id');
+            $res = $player->save();
 
-        event(new Uiupdate());
-
-        return response(["msg" => "Player Created Successfully"], 200);
+            if (!$res) {
+                # code...
+                return response(["msg" => "Player Not Created Successfully"], 200);
+            }
+            event(new Uiupdate());
+            return response(["msg" => "Player Created Successfully"], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response(["msg" => "Error Accurd"], 500);
+        }
     }
 
     /**
@@ -86,18 +95,32 @@ class PlayerController extends Controller
     public function update(Request $request, $id, player $players)
     {
         //
-        $players->find($id)->update([
-            "player_no" => $request->player_no,
-            "name" => $request->name,
-            "mobaile" => $request->mobaile,
-            // "image"=>$request->image,
-            "skill" => $request->skill,
-            "playercategurie_id" => $request->playercategurie_id,
-        ]);
+        try {
+            //code...
+            // Log::info('Received PUT request:', $request->all());
+            // return $request->all();
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('player', 'public');
+                $players->find($id)->update([
+                    "image" =>  asset('storage/' . $imagePath),
+                ]);
+            }
+            $players->find($id)->update([
+                "player_no" => $request->input('player_no'),
+                "name" => $request->input('name'),
+                "mobaile" => $request->input('mobaile'),
+                // "image"=>$request->image,
+                "skill" => $request->input('skill'),
+                "playercategurie_id" => $request->input('playercategurie_id'),
+            ]);
 
-        event(new Uiupdate());
+            event(new Uiupdate());
 
-        return response(["msg" => "Player Updated Successfully"], 200);
+            return response(["msg" => "Player Updated Successfully"], 200);
+        } catch (\Throwable $th) {
+            throw $th;
+            return response(["msg" => "Error Accurd", "error" => $th], 500);
+        }
     }
 
     /**
